@@ -34,7 +34,8 @@ x <- cces %>%
 ```
 
 
-*Describe the relationship between ideology and family income. How does it vary by gender? Does your conclusion change if we "adjust" for race and age?*
+*Describe the relationship between ideology and family income. How does it vary
+by gender? Does your conclusion change if we "adjust" for race and age?*
 
 
 ## Wisdom
@@ -44,6 +45,56 @@ x <- cces %>%
 
 
 ## Courage
+```{r fits}
+fit_1 <- stan_glm(data = x,
+                  formula = ideology ~ faminc,
+                  refresh = 0 )
+
+fit_2 <- stan_glm(data = x,
+                  formula = ideology ~ faminc * gender,
+                  refresh = 0 )
+
+fit_3 <- stan_glm(data = x,
+                  formula = ideology ~ faminc* gender + race + age,
+                  refresh = 0 )
+
+
+
+print(fit_3, detail = FALSE, 4)
+```
+```{r}
+faminc <-  seq(1, 12, 1)
+
+gender <-  c("Male", "Female")
+
+race <-  c("Hispanic", "Black", "Mixed", "White", "Other", "Native American",
+         "Middle Eastern")
+
+age <- 49
+
+newobs <-expand_grid(faminc, gender, race, age) %>%
+  mutate(names = paste (faminc, gender, race, sep  = "_"))
+
+library(tidybayes)
+
+z <- add_fitted_draws(newdata = newobs, fit_3)
+
+z %>%
+  ggplot(aes (fill = gender,
+              x = .value,
+              y = race)) +
+  stat_slab(alpha = 0.5)
+
+```
+
+
+```{r loos}
+loo1 <- loo(fit_1)
+loo2 <- loo(fit_2)
+loo3 <- loo(fit_3)
+
+loo_compare(loo1, loo2, loo3)
+```
 
 
 ## Temperance
